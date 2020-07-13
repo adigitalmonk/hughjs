@@ -1,0 +1,19 @@
+{
+  "name": "hugh.js",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Actor model system for JavaScript",
+  "main": "./index.js",
+  "exports": "./index.js",
+  "author": "Brad \"adigitalmonk\" Boudreau",
+  "license": "MIT",
+  "scripts": {
+    "eslint": "eslint",
+    "test": "mocha test"
+  },
+  "devDependencies": {
+    "eslint": "^7.4.0",
+    "eslint-plugin-mocha": "^7.0.1",
+    "mocha": "^8.0.1"
+  }
+}
