@@ -1,5 +1,5 @@
 export default () => {
-    const actors = [];
+    const actors = {};
 
     const sendFactory = (from) => async (target, message) => {
         const actor = actors[target];
@@ -7,24 +7,31 @@ export default () => {
             return false;
         }
 
-        const [response, new_state] = await actor.handler(message, actor.state, from, actor.send);
-        actors[target].state = new_state;
-        return response;
+        return actor(message, from);
+    };
+
+    const actorFactory = (name, init_state, send, handler) => {
+        const context = {
+            name: name,
+            state: init_state,
+            send: send
+        };
+
+        return async (message, from) => {
+            const [response, new_state] = 
+                await handler(message, context, from);
+
+            context.state = new_state;
+            return response;
+        };
     };
 
     const register = (name, init_state, handler) => {
         if (actors[name]) {
             return false;
         }
-
         const send = sendFactory(name);
-        actors[name] = {
-            name: name,
-            state: init_state,
-            send: send,
-            handler: handler
-        };
-
+        actors[name] = actorFactory(name, init_state, send, handler);
         return [ name,  send ];
     };
 

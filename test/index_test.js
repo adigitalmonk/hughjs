@@ -36,7 +36,7 @@ describe("actors : spawn", () => {
         const [registeredName, send] = stage.register(
             whoAmI,
             initState,
-            (message, state, from) => [[message, state, from], "Done"]
+            (message, { state }, from) => [[message, state, from], "Done"]
         );
         assert.equal(registeredName, whoAmI);
 
@@ -45,6 +45,26 @@ describe("actors : spawn", () => {
         assert.equal(state, initState);
         assert.equal(from, from);
         assert.equal(testMessage, message);
+    });
+
+    describe("stores updated state", async () => {
+        const stage = Stage();
+        const [, send] = stage.register("Storage", 0, async ({ action, add }, { state }) => {
+            switch (action) {
+            case "add":
+                return [true, state + add];
+            case "peek":
+                return [state, state];
+            default:
+                return [false, state];
+            }
+        });
+
+        // If you don't `await` a `send`, the state on the next one
+        // will be the state at the time that you called it not after the previous call
+        await send("Storage", { action: "add", add: 1 });
+        await send("Storage", { action: "add", add: 1 });
+        assert.equal(2, await send("Storage", { action: "peek" }));
     });
 
     describe("shutdown removes actor from stage", async () => {
@@ -62,23 +82,24 @@ describe("actors : spawn", () => {
         const [, sendFromA] = stage.register(
             actorA, 
             {},
-            async (message, state, _from, send) => {
-                const response = await send(message.target, message.content);
+            async ({ target, content }, { send, state }) => {
+                const response = await send(target, content);
                 return [response, state];
             }
         );
         
-        stage.register(actorB, {}, (message, state) => {
-            return [message, state];
+        stage.register(actorB, {}, (message, { state }, from) => {
+            return [{ from, message }, state];
         });
 
         const testMessage = "UnitTesting";
 
-        const result = await sendFromA(actorA, { 
+        const { from, message } = await sendFromA(actorA, { 
             target: actorB,
             content: testMessage
         });
-        
-        assert.equal(testMessage, result);
+
+        assert.equal(actorA, from);
+        assert.equal(testMessage, message);
     });
 });
