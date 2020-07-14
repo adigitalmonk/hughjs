@@ -3,8 +3,8 @@ import Stage from "../index.js";
 
 const noop = () => {};
 
-describe("actors : spawn", () => {
-    describe("registration gives sender", () => {
+describe("Stage interactions with actors", () => {
+    it("gives a send function when registering", () => {
         const stage = Stage();
         const self_name = "Alpha";
         const [self, send] = stage.register(self_name);
@@ -12,13 +12,13 @@ describe("actors : spawn", () => {
         assert.equal(typeof(send), "function");
     });
 
-    describe("names must be unique", () => {
+    it("only accepts unique names", () => {
         const stage = Stage();
         stage.register("alpha");
         assert.equal(stage.register("alpha"), false);
     });
 
-    describe("stages have unique actors", () => {
+    it("has unique actors per stage", () => {
         const stageA = Stage();
         const stageB = Stage();
         const actorName = "alpha";
@@ -28,7 +28,7 @@ describe("actors : spawn", () => {
         assert.equal(typeof(actorBSender), "function");
     });
 
-    describe("init state is passed to handler", async () => {
+    it("provides the initial state to the hanler", async () => {
         const stage = Stage();
         const initState = "someTestValue";
         const whoAmI = "Mocha";
@@ -47,7 +47,7 @@ describe("actors : spawn", () => {
         assert.equal(testMessage, message);
     });
 
-    describe("stores updated state", async () => {
+    it("stores updated state", async () => {
         const stage = Stage();
         const [, send] = stage.register("Storage", 0, async ({ action, add }, { state }) => {
             switch (action) {
@@ -67,7 +67,7 @@ describe("actors : spawn", () => {
         assert.equal(2, await send("Storage", { action: "peek" }));
     });
 
-    describe("shutdown removes actor from stage", async () => {
+    it("removes an actor from the stage when calling shutdown", async () => {
         const stage = Stage();
         const actorName = "Alpha";
         const [, send] = stage.register(actorName, {}, noop);
@@ -75,7 +75,7 @@ describe("actors : spawn", () => {
         assert.equal(await send(actorName), false);
     });
 
-    describe("messages sent between actors", async () => {
+    it("sends messages between actors", async () => {
         const stage = Stage();
         const actorA = "Alpha";
         const actorB = "Beta";
